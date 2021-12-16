@@ -2,7 +2,6 @@ package dev.yuafox.yuabot;
 
 import dev.yuafox.yuabot.endpoints.Endpoint;
 import dev.yuafox.yuabot.sources.DataSource;
-import jdk.internal.jline.internal.Nullable;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,7 +91,6 @@ public class Main {
     }
 
 
-    @Nullable
     public static Map<String, List<String>> getParams(String[] args){
         final Map<String, List<String>> params = new HashMap<>();
 

@@ -11,7 +11,7 @@ jar {
     manifest {
         attributes 'Main-Class': 'dev.yuafox.yuabot.Main'
     }
-    from {configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    from {configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 repositories {
@@ -19,7 +19,8 @@ repositories {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile group: 'org.twitter4j', name: 'twitter4j-core', version: '4.0.7'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    implementation "org.codehaus.groovy:groovy-all:2.4.17"
+    implementation group: 'org.twitter4j', name: 'twitter4j-core', version: '4.0.7'
     implementation 'org.jetbrains:annotations:15.0'
 }
