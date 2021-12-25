@@ -16,17 +16,18 @@ public class Main {
         if(params == null) return;
         if(params.get("name") == null) return;
 
-        System.out.println(" __     __          ____        _   \n" +
-                " \\ \\   / /         |  _ \\      | |  \n" +
-                "  \\ \\_/ /   _  __ _| |_) | ___ | |_ \n" +
-                "   \\   / | | |/ _` |  _ < / _ \\| __|\n" +
-                "    | || |_| | (_| | |_) | (_) | |_ \n" +
-                "    |_| \\__,_|\\__,_|____/ \\___/ \\__|");
+        System.out.println("""
+                __     __          ____        _  \s
+                \\ \\   / /         |  _ \\      | | \s
+                 \\ \\_/ /   _  __ _| |_) | ___ | |_\s
+                  \\   / | | |/ _` |  _ < / _ \\| __|
+                   | || |_| | (_| | |_) | (_) | |_\s
+                   |_| \\__,_|\\__,_|____/ \\___/ \\__|""".indent(1));
 
 
         YuaBot bot = new YuaBot(params.get("name").get(0));
         System.out.format("Bot name: %s\n", params.get("name").get(0));
-        System.out.format("Version %s\n", "v1");
+        System.out.format("Version %s\n", "v1.1");
 
         if(params.get("setup") != null){
             for(String param : params.get("setup")) {
@@ -34,7 +35,8 @@ public class Main {
                     System.out.format("Configuring %s...\n", param);
                     Class<? extends Configurable> clazz = Class.forName(param).asSubclass(Configurable.class);
                     Configurable configurable = clazz.getConstructor().newInstance();
-                    boolean done = configurable.setup(bot);
+                    configurable.init(bot);
+                    boolean done = configurable.setup();
                     if(done)
                         System.out.println("OK.");
                     else
@@ -61,26 +63,31 @@ public class Main {
                 System.out.println("Preparing input...");
                 Class<? extends DataSource> inputClazz = Class.forName(inputClazzName).asSubclass(DataSource.class);
                 input = inputClazz.getConstructor().newInstance();
-                if(input.prepare(bot)) System.out.println("OK.");
+                input.init(bot);
+                if(input.run()) System.out.println("OK.");
                 else {
-                    System.err.println("Not ready!");
+                    System.err.println("Input not ready!");
                     ready = false;
                 }
 
                 System.out.println("Preparing output...");
                 Class<? extends Endpoint> outputClazz = Class.forName(outputClazzName).asSubclass(Endpoint.class);
                 output = outputClazz.getConstructor().newInstance();
-                if(output.prepare(bot)) System.out.println("OK.");
+                output.init(bot);
+                if(output.run()) System.out.println("OK.");
                 else {
-                    System.err.println("Not ready!");
+                    System.err.println("Output not ready!");
                     ready = false;
                 }
 
                 if(ready) {
                     System.out.println("Sending data...");
-                    output.send(bot, input);
+                    output.send(input);
                     System.out.println("OK.");
                 }
+
+                input.end();
+                output.end();
             } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                 e.printStackTrace();
             }

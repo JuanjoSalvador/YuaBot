@@ -15,23 +15,104 @@ import java.util.Properties;
 
 public class TwitterEndpoint implements Endpoint {
 
-    private static final String FILENAME_AUTH = "TwitterAuth.ser";
-    private static final String FILENAME_CONFIG = "TwitterConfig.properties";
-    private static final Properties PROPERTIES = new Properties();
+    private Twitter twitterInstance;
 
-    private final Twitter twitterInstance;
+    private File base;
 
+    private File propertiesFile;
+    private Properties properties;
 
-    public TwitterEndpoint(){
+    private File authFile;
+
+    @Override
+    public void init(YuaBot bot){
         this.twitterInstance = new TwitterFactory().getInstance();
+
+        this.base = new File(bot.getBotFolder(), "twitter");
+
+        this.propertiesFile = new File(this.base, ".properties");
+        this.properties = new Properties();
+
+        this.authFile = new File(this.base, "auth.ser");
+
+        if(this.readCredentials()){
+            this.readAuth();
+        }
     }
 
     @Override
-    public boolean send(@NotNull YuaBot bot, @NotNull DataSource data) {
-        this.readAuth(bot);
+    public boolean setup() {
+        this.base.mkdir();
+        try {
+            if(!propertiesFile.exists()){
+                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+                System.out.println("Consumer key:");
+                String key = br.readLine();
+                System.out.println("Consumer secret:");
+                String secret = br.readLine();
+                this.propertiesFile.createNewFile();
+                this.properties.put("key", key);
+                this.properties.put("secret", secret);
+                this.properties.store(new FileOutputStream(propertiesFile), null);
+            }
 
-        StatusUpdate statusUpdate = new StatusUpdate(data.getText(bot));
-        statusUpdate.setMedia(data.getMedia(bot));
+            if(this.readCredentials()){
+                RequestToken requestToken = this.twitterInstance.getOAuthRequestToken();
+                AccessToken accessToken = null;
+                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+
+                while(accessToken == null) {
+                    System.out.println("Open the following URL to login with Twitter.");
+                    System.out.println(requestToken.getAuthorizationURL());
+                    System.out.println("Then paste your PIN here:");
+
+                    String pin = br.readLine();
+                    if(pin.length() > 0){
+                        accessToken = this.twitterInstance.getOAuthAccessToken(requestToken, pin);
+                    }else{
+                        accessToken = this.twitterInstance.getOAuthAccessToken();
+                    }
+                }
+
+                ObjectOutputStream oos = null;
+                FileOutputStream fout;
+                try{
+                    fout = new FileOutputStream(this.authFile, false);
+                    oos = new ObjectOutputStream(fout);
+                    oos.writeObject(accessToken);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    return false;
+                } finally {
+                    if(oos != null){
+                        oos.close();
+                    }
+                }
+                return true;
+
+            }else{
+                System.err.println("Invalid credentials.");
+            }
+        } catch (TwitterException | IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    @Override
+    public boolean run() {
+        try {
+            this.twitterInstance.verifyCredentials();
+            return true;
+        } catch (IllegalStateException | TwitterException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean send(@NotNull DataSource data) {
+        StatusUpdate statusUpdate = new StatusUpdate(data.getText());
+        statusUpdate.setMedia(data.getMedia());
         try {
             this.twitterInstance.updateStatus(statusUpdate);
             return true;
@@ -42,79 +123,17 @@ public class TwitterEndpoint implements Endpoint {
     }
 
     @Override
-    public boolean setup(YuaBot bot) {
-        try {
-            File fileConfig = new File(bot.getBotFolder(), TwitterEndpoint.FILENAME_CONFIG);
-
-            if(!fileConfig.exists()){
-                BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-                System.out.println("Consumer key:");
-                String key = br.readLine();
-                System.out.println("Consumer secret:");
-                String secret = br.readLine();
-                TwitterEndpoint.PROPERTIES.put("key", key);
-                TwitterEndpoint.PROPERTIES.put("secret", secret);
-                TwitterEndpoint.PROPERTIES.store(new FileOutputStream(fileConfig), null);
-            }
-
-            this.twitterInstance.setOAuthConsumer(TwitterEndpoint.PROPERTIES.getProperty("key"), TwitterEndpoint.PROPERTIES.getProperty("secret"));
-
-            RequestToken requestToken = this.twitterInstance.getOAuthRequestToken();
-            AccessToken accessToken = null;
-            BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-            while(accessToken == null) {
-                System.out.println("Open the following URL to login with Twitter.");
-                System.out.println(requestToken.getAuthorizationURL());
-                System.out.println("Then paste your PIN here:");
-
-                String pin = br.readLine();
-                if(pin.length() > 0){
-                    accessToken = this.twitterInstance.getOAuthAccessToken(requestToken, pin);
-                }else{
-                    accessToken = this.twitterInstance.getOAuthAccessToken();
-                }
-            }
-
-            ObjectOutputStream oos = null;
-            FileOutputStream fout;
-            try{
-                fout = new FileOutputStream(new File(bot.getBotFolder(), TwitterEndpoint.FILENAME_AUTH), false);
-                oos = new ObjectOutputStream(fout);
-                oos.writeObject(accessToken);
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            } finally {
-                if(oos != null){
-                    oos.close();
-                }
-            }
-            return true;
-        } catch (TwitterException | IOException e) {
-            e.printStackTrace();
-        }
-        return false;
+    public boolean end() {
+        return true;
     }
 
-    @Override
-    public boolean prepare(YuaBot bot) {
-        if(!this.readCredentials(bot)) return false;
-        this.readAuth(bot);
-        try {
-            this.twitterInstance.verifyCredentials();
-            return true;
-        } catch (IllegalStateException | TwitterException e) {
-            return false;
-        }
-    }
 
-    private boolean readCredentials(YuaBot bot) {
+    private boolean readCredentials() {
         try {
-            File file = new File(bot.getBotFolder(), TwitterEndpoint.FILENAME_CONFIG);
-            if(!file.exists()) return false;
-            FileInputStream fileIn = new FileInputStream(file);
-            TwitterEndpoint.PROPERTIES.load(fileIn);
-            this.twitterInstance.setOAuthConsumer(TwitterEndpoint.PROPERTIES.getProperty("key"), TwitterEndpoint.PROPERTIES.getProperty("secret"));
+            if(!this.propertiesFile.exists()) return false;
+            FileInputStream fileIn = new FileInputStream(this.propertiesFile);
+            this.properties.load(fileIn);
+            this.twitterInstance.setOAuthConsumer(this.properties.getProperty("key"), this.properties.getProperty("secret"));
             return true;
         }catch (Exception e){
             e.printStackTrace(System.err);
@@ -122,11 +141,10 @@ public class TwitterEndpoint implements Endpoint {
         }
     }
 
-    private void readAuth(YuaBot bot) {
+    private void readAuth() {
         try {
-            File file = new File(bot.getBotFolder(), TwitterEndpoint.FILENAME_AUTH);
-            if(!file.exists()) return;
-            FileInputStream fileIn = new FileInputStream(file);
+            if(!this.authFile.exists()) return;
+            FileInputStream fileIn = new FileInputStream(this.authFile);
             ObjectInputStream in = new ObjectInputStream(fileIn);
             AccessToken accessToken = (AccessToken) in.readObject();
             this.twitterInstance.setOAuthAccessToken(accessToken);

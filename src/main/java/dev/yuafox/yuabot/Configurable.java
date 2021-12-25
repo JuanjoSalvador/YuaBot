@@ -1,6 +1,9 @@
 package dev.yuafox.yuabot;
 
 public interface Configurable {
-    boolean setup(YuaBot bot);
-    boolean prepare(YuaBot bot);
+
+    void init(YuaBot bot);
+    boolean setup();
+    boolean run();
+    boolean end();
 }

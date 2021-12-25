@@ -7,7 +7,7 @@ import java.io.File;
 
 public interface DataSource extends Configurable {
 
-    String getText(YuaBot bot);
-    File getMedia(YuaBot bot);
+    String getText();
+    File getMedia();
 
 }

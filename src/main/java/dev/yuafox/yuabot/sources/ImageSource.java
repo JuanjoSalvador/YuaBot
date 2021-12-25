@@ -7,29 +7,42 @@ import java.util.Random;
 
 public class ImageSource implements DataSource {
 
+    private YuaBot bot = null;
+    private File imageFolder = null;
+
     @Override
-    public boolean setup(YuaBot bot) {
-        File imageFolder = new File(bot.getBotFolder(), "images");
-        if(imageFolder.exists()) return true;
-        return imageFolder.mkdir();
+    public void init(YuaBot bot) {
+        this.bot = bot;
+        this.imageFolder = new File(bot.getBotFolder(), "images");
     }
 
     @Override
-    public boolean prepare(YuaBot bot) {
-        return new File(bot.getBotFolder(), "images").exists();
+    public boolean setup() {
+        if(this.imageFolder.exists()) return true;
+        return this.imageFolder.mkdir();
     }
 
     @Override
-    public String getText(YuaBot bot) {
+    public boolean run() {
+        return this.imageFolder.exists();
+    }
+
+    @Override
+    public String getText() {
         return "";
     }
 
     @Override
-    public File getMedia(YuaBot bot) {
-        File[] files = new File(bot.getBotFolder(), "images").listFiles();
+    public File getMedia() {
+        File[] files = new File(this.bot.getBotFolder(), "images").listFiles();
         assert files != null;
 
         Random rand = new Random();
         return files[rand.nextInt(files.length)];
+    }
+
+    @Override
+    public boolean end() {
+        return true;
     }
 }
