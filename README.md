@@ -31,6 +31,7 @@ java -jar yuabot.jar -name MyBot -setup dev.yuafox.yuabot.endpoints.TwitterEndpo
 
 #### Input:
 - dev.yuafox.yuabot.sources.ImageSource
+- dev.yuafox.yuabot.sources.RedditSource
 
 #### Output:
 - dev.yuafox.yuabot.endpoints.TwitterEndpoint
@@ -55,5 +56,5 @@ java -jar yuabot.jar -name TestBot -setup dev.yuafox.yuabot.sources.ImageSource 
 
 3. Execute the following command:
 ```cronjob
-java -jar yuabot.jar -input dev.yuafox.yuabot.sources.ImageSource -output dev.yuafox.yuabot.endpoints.TwitterEndpoint
+java -jar yuabot.jar -name TestBot -input dev.yuafox.yuabot.sources.ImageSource -output dev.yuafox.yuabot.endpoints.TwitterEndpoint
 ```

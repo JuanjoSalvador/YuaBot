@@ -33,8 +33,8 @@ public class Main {
             for(String param : params.get("setup")) {
                 try {
                     System.out.format("Configuring %s...\n", param);
-                    Class<? extends Configurable> clazz = Class.forName(param).asSubclass(Configurable.class);
-                    Configurable configurable = clazz.getConstructor().newInstance();
+                    Class<? extends Action> clazz = Class.forName(param).asSubclass(Action.class);
+                    Action configurable = clazz.getConstructor().newInstance();
                     configurable.init(bot);
                     boolean done = configurable.setup();
                     if(done)
@@ -88,8 +88,10 @@ public class Main {
 
                 input.end();
                 output.end();
-            } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
+                System.err.println("Errors found! Action not completed.");
+                System.exit(1);
             }
         }
 

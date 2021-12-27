@@ -104,9 +104,12 @@ public class RedditSource implements DataSource {
     private void readRandomPost(String subreddit) throws IOException {
         JSONArray json = Https.getJsonArray(String.format("https://www.reddit.com/r/%s/random.json", subreddit));
         JSONObject baseData = json.getJSONObject(0).getJSONObject("data").getJSONArray("children").getJSONObject(0).getJSONObject("data");
+
         String imgUrl = baseData.getString("url_overridden_by_dest");
-        this.text = baseData.getString("title")+"\n"+
-                "\uD83C\uDFF7️ "+baseData.getString("link_flair_text")+"\n"+
+        String tag = baseData.optString("link_flair_text");
+
+        this.text = baseData.getString("title")+"\n\n"+
+                ( tag.equals("") ? "" : "\uD83C\uDFF7️ "+tag+"\n" )  +
                 "\uD83D\uDD17 https://reddit.com"+baseData.getString("permalink");
         this.image = Https.download(imgUrl, this.imagesFolder.getAbsolutePath()+"/"+new URL(imgUrl).getFile());
     }
