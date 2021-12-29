@@ -28,4 +28,5 @@ dependencies {
     testImplementation group: 'junit', name: 'junit', version: '4.12'
     implementation group: 'org.twitter4j', name: 'twitter4j-core', version: '4.0.7'
     implementation 'org.jetbrains:annotations:22.0.0'
+    implementation 'org.xerial:sqlite-jdbc:3.36.0.3'
 }

@@ -40,7 +40,7 @@ public class Main {
                     if(done)
                         System.out.println("OK.");
                     else
-                        System.err.println("Error!");
+                        System.err.println("Error: setup not done correctly!");
                 } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException e) {
                     e.printStackTrace();
                 }
