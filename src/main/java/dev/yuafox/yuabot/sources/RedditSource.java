@@ -106,10 +106,12 @@ public class RedditSource implements DataSource {
         JSONObject baseData = json.getJSONObject(0).getJSONObject("data").getJSONArray("children").getJSONObject(0).getJSONObject("data");
 
         String imgUrl = baseData.getString("url_overridden_by_dest");
-        String tag = baseData.optString("link_flair_text");
+        String tag = baseData.optString("link_flair_text", "");
+
+        assert tag != null;
 
         this.text = baseData.getString("title")+"\n\n"+
-                ( tag.equals("") ? "" : "\uD83C\uDFF7️ "+tag+"\n" )  +
+                ( /* Why */ tag.equals("null") ? "" : "\uD83C\uDFF7️ "+tag+"\n" )  +
                 "\uD83D\uDD17 https://reddit.com"+baseData.getString("permalink");
         this.image = Https.download(imgUrl, this.imagesFolder.getAbsolutePath()+"/"+new URL(imgUrl).getFile());
     }

@@ -52,7 +52,7 @@ Building a bot that posts a random picture to Twitter.
 ```
 java -jar yuabot.jar -name TestBot -setup dev.yuafox.yuabot.sources.ImageSource dev.yuafox.yuabot.endpoints.TwitterEndpoint 
 ```
-2. Put pictures in the folder bots/TestBot/images
+2. Put pictures in the folder bots/TestBot/images/data
 
 3. Execute the following command:
 ```cronjob
