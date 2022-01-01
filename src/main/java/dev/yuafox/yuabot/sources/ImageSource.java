@@ -133,7 +133,7 @@ public class ImageSource implements DataSource {
 
             PreparedStatement updateSt = this.connection.prepareStatement(
                     "UPDATE images SET last=? WHERE name=?");
-            updateSt.setLong(1, current-interval);
+            updateSt.setLong(1, current);
             updateSt.setString(2, name);
             updateSt.executeUpdate();
             resultSet.close(); statement.close();
